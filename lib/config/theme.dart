@@ -1,0 +1,80 @@
+import 'package:flutter/material.dart';
+
+class AppTheme {
+  static const Color background = Color(0xFF08040F);
+  static const Color surface = Color(0xFF13081C);
+  static const Color surfaceLight = Color(0xFF1A0E26);
+  static const Color gold = Color(0xFFD4AF37);
+  static const Color goldBright = Color(0xFFFFD700);
+  static const Color violet = Color(0xFF8A3CFF);
+  static const Color violetGlow = Color(0xCC8A3CFF);
+  static const Color textPrimary = Color(0xFFE2DCF0);
+  static const Color textSecondary = Color(0xFFA499B8);
+  static const Color textMuted = Color(0xFF645A78);
+  static const Color success = Color(0xFF34C759);
+  static const Color danger = Color(0xFFFF3B30);
+  static const Color warning = Color(0xFFFF9500);
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: background,
+      colorScheme: const ColorScheme.dark(
+        primary: goldBright,
+        secondary: violet,
+        surface: surface,
+        error: danger,
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: textPrimary),
+        bodyMedium: TextStyle(color: textPrimary),
+        bodySmall: TextStyle(color: textSecondary),
+        titleLarge: TextStyle(color: goldBright, fontWeight: FontWeight.bold),
+        titleMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: surface,
+        foregroundColor: goldBright,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      cardTheme: const CardTheme(
+        color: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: surface,
+        selectedItemColor: goldBright,
+        unselectedItemColor: textMuted,
+        type: BottomNavigationBarType.fixed,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surfaceLight,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: gold.withOpacity(0.2)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: goldBright),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: gold,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
