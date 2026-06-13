@@ -15,10 +15,14 @@ class AppTheme {
   static const Color danger = Color(0xFFFF3B30);
   static const Color warning = Color(0xFFFF9500);
 
+  static const String displayFont = 'Cinzel';
+  static const String labelFont = 'Orbitron';
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: labelFont,
       scaffoldBackgroundColor: background,
       colorScheme: const ColorScheme.dark(
         primary: goldBright,
@@ -26,18 +30,22 @@ class AppTheme {
         surface: surface,
         error: danger,
       ),
-      textTheme: const TextTheme(
-        bodyLarge: TextStyle(color: textPrimary),
-        bodyMedium: TextStyle(color: textPrimary),
-        bodySmall: TextStyle(color: textSecondary),
-        titleLarge: TextStyle(color: goldBright, fontWeight: FontWeight.bold),
-        titleMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+      textTheme: TextTheme(
+        bodyLarge: const TextStyle(color: textPrimary, fontFamily: labelFont),
+        bodyMedium: const TextStyle(color: textPrimary, fontFamily: labelFont),
+        bodySmall: const TextStyle(color: textSecondary, fontFamily: labelFont),
+        titleLarge: const TextStyle(color: goldBright, fontWeight: FontWeight.bold, fontFamily: displayFont),
+        titleMedium: const TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontFamily: displayFont),
+        labelSmall: const TextStyle(color: textMuted, fontFamily: labelFont, letterSpacing: 1.5),
+        labelMedium: const TextStyle(color: textSecondary, fontFamily: labelFont, letterSpacing: 1),
+        labelLarge: const TextStyle(color: goldBright, fontFamily: labelFont, fontWeight: FontWeight.bold, letterSpacing: 2),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: surface,
         foregroundColor: goldBright,
         elevation: 0,
         centerTitle: true,
+        titleTextStyle: TextStyle(color: goldBright, fontFamily: displayFont, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 2),
       ),
       cardTheme: const CardTheme(
         color: surface,

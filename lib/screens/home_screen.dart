@@ -11,6 +11,7 @@ import 'chat_list_screen.dart';
 import 'profile_screen.dart';
 import 'admin_screen.dart';
 import 'notifications_screen.dart';
+import 'hub_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -69,9 +70,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TNSVT'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'T.N.S.V.T',
+              style: TextStyle(
+                fontFamily: AppTheme.displayFont,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 3,
+                color: AppTheme.goldBright,
+              ),
+            ),
+            Text(
+              'Reino del Cristo Íntegro',
+              style: TextStyle(
+                fontFamily: AppTheme.displayFont,
+                fontSize: 10,
+                color: AppTheme.violet,
+                letterSpacing: 1.5,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.account_tree_outlined),
+            tooltip: 'Hub Central',
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const HubScreen()));
+            },
+          ),
           ValueListenableBuilder<int>(
             valueListenable: NotificationService.instance.unreadCount,
             builder: (context, count, _) {

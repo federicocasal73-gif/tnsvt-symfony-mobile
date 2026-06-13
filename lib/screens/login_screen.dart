@@ -95,15 +95,19 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Text('⛧ T.N.S.V.T ⛧',
                     style: TextStyle(
+                        fontFamily: AppTheme.displayFont,
                         color: AppTheme.goldBright,
                         fontSize: 28,
-                        fontWeight: FontWeight.bold)),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4)),
                 const SizedBox(height: 8),
                 const Text('NEURO-SPIRITUAL VALUE THEORY',
                     style: TextStyle(
+                        fontFamily: AppTheme.labelFont,
                         color: AppTheme.textSecondary,
-                        fontSize: 12,
-                        letterSpacing: 2)),
+                        fontSize: 11,
+                        letterSpacing: 3,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 32),
                 TextField(
                   controller: _codeCtrl,
@@ -152,7 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text('ENTRAR AL GATEWAY',
                             style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold)),
+                                fontFamily: AppTheme.labelFont,
+                                fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 2)),
                   ),
                 ),
               ],
