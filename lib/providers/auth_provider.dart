@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -14,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider(this._api, this._storage);
 
   AppUser? get user => _user;
+  String? get userCode => _user?.code;
   bool get isLoggedIn => _user != null;
   bool get isAdmin => _user?.isAdmin ?? false;
   bool get loading => _loading;
@@ -27,6 +29,7 @@ class AuthProvider extends ChangeNotifier {
         if (res['authenticated'] == true && res['user'] != null) {
           _user = AppUser.fromJson(res['user']);
           await _storage.saveUser(_user!);
+          await _registerForNotifications(_user!.code);
         } else {
           // Sesión expirada en backend
           await _storage.clearUser();
@@ -52,6 +55,7 @@ class AuthProvider extends ChangeNotifier {
         await _storage.saveUser(_user!);
         _loading = false;
         notifyListeners();
+        await _registerForNotifications(_user!.code);
         return true;
       } else {
         _error = res['error'] ?? 'Código inválido';
@@ -67,7 +71,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> _registerForNotifications(String code) async {
+    try {
+      await NotificationService.instance.registerDeviceForUser(code);
+      await NotificationService.instance.refreshUnreadCount(code);
+    } catch (e) {
+      debugPrint('register for notifications failed: $e');
+    }
+  }
+
   Future<void> logout() async {
+    await NotificationService.instance.unregisterDevice();
     await _api.logout();
     await _storage.clearUser();
     _user = null;

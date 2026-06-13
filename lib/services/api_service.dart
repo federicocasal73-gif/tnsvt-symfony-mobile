@@ -66,13 +66,13 @@ class ApiService {
     return response.data;
   }
 
-  Future<dynamic> post(String path, {Map<String, dynamic>? body}) async {
-    final response = await _dio.post(path, data: body);
+  Future<dynamic> post(String path, {Map<String, dynamic>? body, Map<String, dynamic>? query}) async {
+    final response = await _dio.post(path, data: body, queryParameters: query);
     return response.data;
   }
 
-  Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
-    final response = await _dio.put(path, data: body);
+  Future<dynamic> put(String path, {Map<String, dynamic>? body, Map<String, dynamic>? query}) async {
+    final response = await _dio.put(path, data: body, queryParameters: query);
     return response.data;
   }
 
