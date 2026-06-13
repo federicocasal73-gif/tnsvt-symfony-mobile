@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/notification_service.dart';
+import '../widgets/push_permission_banner.dart';
 import 'feed_screen.dart';
 import 'academia_screen.dart';
 import 'macro_screen.dart';
@@ -103,6 +104,7 @@ class HubScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
+            const PushPermissionBanner(),
             const SizedBox(height: 8),
             Text(
               'Dios / Identidad',

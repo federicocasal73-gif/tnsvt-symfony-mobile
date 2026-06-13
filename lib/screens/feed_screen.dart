@@ -195,23 +195,67 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Widget _chip(String value, String label, String current) {
     final active = value == current;
+    final accent = _accentFor(value);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: ChoiceChip(
-        label: Text(label),
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_iconFor(value), size: 12, color: active ? Colors.black : accent),
+            const SizedBox(width: 4),
+            Text(label),
+          ],
+        ),
         selected: active,
         onSelected: (_) => _changeCategory(value),
         selectedColor: AppTheme.gold,
         backgroundColor: AppTheme.surface,
         labelStyle: TextStyle(
+          fontFamily: AppTheme.labelFont,
           color: active ? Colors.black : AppTheme.textSecondary,
-          fontSize: 12,
-          fontWeight: active ? FontWeight.bold : FontWeight.normal,
+          fontSize: 10,
+          fontWeight: active ? FontWeight.bold : FontWeight.w600,
+          letterSpacing: 1,
         ),
         side: BorderSide(
-          color: active ? AppTheme.gold : AppTheme.violet.withOpacity(0.3),
+          color: active ? AppTheme.gold : accent.withOpacity(0.5),
         ),
       ),
     );
+  }
+
+  IconData _iconFor(String value) {
+    switch (value) {
+      case 'señales':
+        return Icons.bolt;
+      case 'resultados':
+        return Icons.emoji_events;
+      case 'proyecciones':
+        return Icons.trending_up;
+      case 'pregunta':
+        return Icons.help_outline;
+      case 'general':
+        return Icons.forum;
+      default:
+        return Icons.all_inclusive;
+    }
+  }
+
+  Color _accentFor(String value) {
+    switch (value) {
+      case 'señales':
+        return AppTheme.gold;
+      case 'resultados':
+        return AppTheme.success;
+      case 'proyecciones':
+        return AppTheme.violet;
+      case 'pregunta':
+        return AppTheme.violet;
+      case 'general':
+        return AppTheme.textSecondary;
+      default:
+        return AppTheme.gold;
+    }
   }
 }
