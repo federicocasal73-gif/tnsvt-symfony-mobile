@@ -51,7 +51,15 @@ Las tareas se muestran por `orden` ASC pero no hay UI para reordenarlas. Agregar
 
 ## Completado recientemente
 
-- v1.2 (2026-06-13): ~~Journal con fotos~~ + ~~Calendar live ForexFactory~~
+- v1.4.4 (2026-06-13): Webview in-app para enlaces externos (sin url_launcher)
+- v1.4.3 (2026-06-13): MainActivity extends FlutterFragmentActivity
+- v1.4.2 (2026-06-13): url_launcher fallback a platformDefault
+- v1.4.1 (2026-06-13): AndroidManifest queries para Android 11+
+- v1.4 (2026-06-13): Macro sub-tab 'Datos' con enlaces externos
+- v1.3.2 (2026-06-13): Calendar cache persistente + sin boton refresh
+- v1.3.1 (2026-06-13): fix Calendar rate-limit ForexFactory
+- v1.3 (2026-06-13): Calendar con filtros por pais
+- v1.2 (2026-06-13): Journal con fotos + Calendar live ForexFactory
 - v1.1 (2026-06-13): Calendar Economico + reacciones like/love/fire
 - v1.0 (2026-06-13): Hub iluminado + Cristo Integro como gateway
 - v0.9 (2026-06-13): 2 Pasos locked + Trading Journal
