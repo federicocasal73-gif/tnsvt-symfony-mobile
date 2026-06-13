@@ -63,13 +63,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('CALENDARIO ECONÓMICO'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Actualizar',
-            onPressed: _loading ? null : () => _load(force: true),
-          ),
-        ],
       ),
       body: _buildBody(),
     );

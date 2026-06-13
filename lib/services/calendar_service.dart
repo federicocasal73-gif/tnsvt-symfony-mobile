@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EconomicEvent {
   final DateTime date;
@@ -75,8 +77,56 @@ class CalendarService {
 
   List<EconomicEvent>? _cache;
   DateTime? _cachedAt;
+  bool _hydrated = false;
+
+  static const _prefsKey = 'calendar_events_json';
+  static const _prefsTsKey = 'calendar_events_ts';
+
+  Future<void> _hydrate() async {
+    if (_hydrated) return;
+    _hydrated = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ts = prefs.getString(_prefsTsKey);
+      if (ts == null) return;
+      final cachedAt = DateTime.tryParse(ts);
+      if (cachedAt == null) return;
+      if (DateTime.now().difference(cachedAt) >= _cacheTtl) return;
+      final json = prefs.getString(_prefsKey);
+      if (json == null) return;
+      final List<dynamic> data = jsonDecode(json) as List<dynamic>;
+      _cache = data
+          .map((e) => EconomicEvent.fromJson(e as Map<String, dynamic>))
+          .where((e) => e.impact != 'holiday')
+          .toList();
+      _cache!.sort((a, b) => a.date.compareTo(b.date));
+      _cachedAt = cachedAt;
+    } catch (_) {
+      // Silently ignore hydrate failures
+    }
+  }
+
+  Future<void> _persist() async {
+    if (_cache == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final json = jsonEncode(_cache!.map((e) => {
+            'title': e.name,
+            'country': e.currency,
+            'date': e.date.toUtc().toIso8601String(),
+            'impact': e.impact,
+            'forecast': e.forecast,
+            'previous': e.previous,
+          }).toList());
+      await prefs.setString(_prefsKey, json);
+      await prefs.setString(_prefsTsKey, DateTime.now().toIso8601String());
+    } catch (_) {
+      // Silently ignore persist failures
+    }
+  }
 
   Future<List<EconomicEvent>> fetchEvents({bool forceRefresh = false}) async {
+    await _hydrate();
     if (!forceRefresh && _cache != null && _cachedAt != null) {
       if (DateTime.now().difference(_cachedAt!) < _cacheTtl) {
         return _cache!;
@@ -84,20 +134,16 @@ class CalendarService {
     }
     final response = await _dio.get(_url);
     if (response.statusCode == 429 || response.statusCode == 503) {
-      // Rate limit / bloqueado: usar cache si hay
-      if (_cache != null) {
-        return _cache!;
-      }
+      if (_cache != null) return _cache!;
       throw Exception('ForexFactory rate-limit. Reintentá en 5 minutos.');
     }
     if (response.statusCode != 200) {
+      if (_cache != null) return _cache!;
       throw Exception('HTTP ${response.statusCode}');
     }
     final body = response.data;
     if (body is String && body.contains('Request Denied')) {
-      if (_cache != null) {
-        return _cache!;
-      }
+      if (_cache != null) return _cache!;
       throw Exception('ForexFactory bloqueó la petición. Reintentá en 5 min.');
     }
     final List<dynamic> data = body as List<dynamic>;
@@ -108,6 +154,7 @@ class CalendarService {
     events.sort((a, b) => a.date.compareTo(b.date));
     _cache = events;
     _cachedAt = DateTime.now();
+    await _persist();
     return events;
   }
 }
