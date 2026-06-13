@@ -12,49 +12,55 @@ class AdminUsersTab extends StatelessWidget {
     final admin = context.watch<AdminProvider>();
 
     if (admin.loading && admin.users.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppTheme.gold),
+      return Material(
+        color: AppTheme.background,
+        child: const Center(
+          child: CircularProgressIndicator(color: AppTheme.gold),
+        ),
       );
     }
 
-    return Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: () => admin.fetchUsers(),
-          child: admin.users.isEmpty
-              ? ListView(
-                  children: const [
-                    SizedBox(height: 80),
-                    Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.people,
-                              size: 64, color: AppTheme.textMuted),
-                          SizedBox(height: 8),
-                          Text('No hay usuarios',
-                              style: TextStyle(color: AppTheme.textSecondary)),
-                        ],
+    return Material(
+      color: AppTheme.background,
+      child: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () => admin.fetchUsers(),
+            child: admin.users.isEmpty
+                ? ListView(
+                    children: const [
+                      SizedBox(height: 80),
+                      Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.people,
+                                size: 64, color: AppTheme.textMuted),
+                            SizedBox(height: 8),
+                            Text('No hay usuarios',
+                                style: TextStyle(color: AppTheme.textSecondary)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
-                  itemCount: admin.users.length,
-                  itemBuilder: (_, i) => _UserTile(user: admin.users[i]),
-                ),
-        ),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: FloatingActionButton.small(
-            onPressed: () => _showUserForm(context, null),
-            backgroundColor: AppTheme.gold,
-            foregroundColor: Colors.black,
-            child: const Icon(Icons.person_add),
+                    ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
+                    itemCount: admin.users.length,
+                    itemBuilder: (_, i) => _UserTile(user: admin.users[i]),
+                  ),
           ),
-        ),
-      ],
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: () => _showUserForm(context, null),
+              backgroundColor: AppTheme.gold,
+              foregroundColor: Colors.black,
+              child: const Icon(Icons.person_add),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

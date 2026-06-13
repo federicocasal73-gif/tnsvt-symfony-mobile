@@ -10,52 +10,55 @@ class AdminTasksTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final admin = context.watch<AdminProvider>();
-    return Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: () => admin.fetchTasks(),
-          child: admin.loading && admin.tasks.isEmpty
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppTheme.gold),
-                )
-              : admin.tasks.isEmpty
-                  ? ListView(
-                      children: const [
-                        SizedBox(height: 80),
-                        Center(
-                          child: Column(
-                            children: [
-                              Icon(Icons.task,
-                                  size: 64, color: AppTheme.textMuted),
-                              SizedBox(height: 8),
-                              Text('No hay tareas',
-                                  style:
-                                      TextStyle(color: AppTheme.textSecondary)),
-                            ],
+    return Material(
+      color: AppTheme.background,
+      child: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () => admin.fetchTasks(),
+            child: admin.loading && admin.tasks.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppTheme.gold),
+                  )
+                : admin.tasks.isEmpty
+                    ? ListView(
+                        children: const [
+                          SizedBox(height: 80),
+                          Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.task,
+                                    size: 64, color: AppTheme.textMuted),
+                                SizedBox(height: 8),
+                                Text('No hay tareas',
+                                    style:
+                                        TextStyle(color: AppTheme.textSecondary)),
+                              ],
+                            ),
                           ),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
+                        itemCount: admin.tasks.length,
+                        itemBuilder: (_, i) => _TaskTile(
+                          task: admin.tasks[i],
+                          onEdit: (ctx, t) => _showTaskForm(ctx, t),
                         ),
-                      ],
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
-                      itemCount: admin.tasks.length,
-                      itemBuilder: (_, i) => _TaskTile(
-                        task: admin.tasks[i],
-                        onEdit: (ctx, t) => _showTaskForm(ctx, t),
                       ),
-                    ),
-        ),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: FloatingActionButton.small(
-            onPressed: () => _showTaskForm(context, null),
-            backgroundColor: AppTheme.gold,
-            foregroundColor: Colors.black,
-            child: const Icon(Icons.add),
           ),
-        ),
-      ],
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: () => _showTaskForm(context, null),
+              backgroundColor: AppTheme.gold,
+              foregroundColor: Colors.black,
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
