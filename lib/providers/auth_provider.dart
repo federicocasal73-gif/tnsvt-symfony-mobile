@@ -24,11 +24,13 @@ class AuthProvider extends ChangeNotifier {
   Future<void> tryRestoreSession() async {
     _user = await _storage.loadUser();
     if (_user != null) {
+      _api.setUserCode(_user!.code);
       try {
         final res = await _api.checkAuth();
         if (res['authenticated'] == true && res['user'] != null) {
           _user = AppUser.fromJson(res['user']);
           await _storage.saveUser(_user!);
+          _api.setUserCode(_user!.code);
           await _registerForNotifications(_user!.code);
         } else {
           // Sesión expirada en backend
@@ -53,6 +55,7 @@ class AuthProvider extends ChangeNotifier {
       if (res['success'] == true && res['user'] != null) {
         _user = AppUser.fromJson(res['user']);
         await _storage.saveUser(_user!);
+        _api.setUserCode(_user!.code);
         _loading = false;
         notifyListeners();
         await _registerForNotifications(_user!.code);

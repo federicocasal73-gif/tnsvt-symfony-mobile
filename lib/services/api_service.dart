@@ -4,6 +4,7 @@ import '../config/api_config.dart';
 class ApiService {
   late final Dio _dio;
   final Map<String, String> _sessionCookies = {};
+  String? _userCode;
 
   ApiService() {
     _dio = Dio(BaseOptions(
@@ -18,6 +19,9 @@ class ApiService {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
+        if (_userCode != null && _userCode!.isNotEmpty) {
+          options.headers['X-User-Code'] = _userCode!;
+        }
         if (_sessionCookies.isNotEmpty) {
           options.headers['Cookie'] = _sessionCookies.entries
               .map((e) => '${e.key}=${e.value}')
@@ -45,8 +49,13 @@ class ApiService {
     ));
   }
 
+  void setUserCode(String? code) {
+    _userCode = code;
+  }
+
   void clearSession() {
     _sessionCookies.clear();
+    _userCode = null;
   }
 
   Future<Map<String, dynamic>> login(String code, {String? password}) async {
