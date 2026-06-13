@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "913224251372",
+    "project_id": "tnsvt-app",
+    "storage_bucket": "tnsvt-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913224251372:android:7cc58b814c0b48b6ec32c9",
+        "android_client_info": {
+          "package_name": "com.tnsvt.tnsvt_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALFENG-exTbw6bdtg2PiSltAFsEpSaGSA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
