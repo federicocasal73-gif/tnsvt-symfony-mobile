@@ -56,8 +56,9 @@ class _AdminScreenState extends State<AdminScreen>
           ],
         ),
       ),
-      body: const TabBarView(
-        children: [
+      body: TabBarView(
+        controller: _tab,
+        children: const [
           AdminDashboardTab(),
           AdminUsersTab(),
           AdminTasksTab(),
