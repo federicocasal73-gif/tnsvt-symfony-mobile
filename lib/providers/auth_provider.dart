@@ -27,8 +27,15 @@ class AuthProvider extends ChangeNotifier {
         if (res['authenticated'] == true && res['user'] != null) {
           _user = AppUser.fromJson(res['user']);
           await _storage.saveUser(_user!);
+        } else {
+          // Sesión expirada en backend
+          await _storage.clearUser();
+          _api.clearSession();
+          _user = null;
         }
-      } catch (_) {}
+      } catch (_) {
+        // Si falla la red, dejamos al usuario logueado localmente
+      }
     }
     notifyListeners();
   }
