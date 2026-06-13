@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import 'feed_screen.dart';
 import 'academia_screen.dart';
+import 'macro_screen.dart';
 import 'tasks_screen.dart';
 import 'chat_list_screen.dart';
 import 'profile_screen.dart';
@@ -35,6 +36,12 @@ class _HomeScreenState extends State<HomeScreen> {
         activeIcon: Icons.school,
         label: 'Academia',
         screen: const AcademiaScreen(),
+      ),
+      _TabItem(
+        icon: Icons.show_chart_outlined,
+        activeIcon: Icons.show_chart,
+        label: 'Macro',
+        screen: const MacroScreen(),
       ),
       _TabItem(
         icon: Icons.task_alt_outlined,
