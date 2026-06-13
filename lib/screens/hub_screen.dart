@@ -12,6 +12,7 @@ import 'chat_list_screen.dart';
 import 'profile_screen.dart';
 import 'admin_screen.dart';
 import 'notifications_screen.dart';
+import 'trading_journal_screen.dart';
 
 class HubScreen extends StatelessWidget {
   const HubScreen({super.key});
@@ -87,6 +88,11 @@ class HubScreen extends StatelessWidget {
             icon: const Icon(Icons.chat_bubble_outline),
             tooltip: 'Chat',
             onPressed: () => _go(context, const ChatListScreen()),
+          ),
+          IconButton(
+            icon: const Icon(Icons.assessment_outlined),
+            tooltip: 'Trading Journal',
+            onPressed: () => _go(context, const TradingJournalScreen()),
           ),
           if (isAdmin)
             IconButton(

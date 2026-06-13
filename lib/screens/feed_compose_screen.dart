@@ -119,6 +119,7 @@ class _FeedComposeScreenState extends State<FeedComposeScreen> {
             spacing: 6,
             children: [
               _catChip('general', 'General'),
+              _catChip('señales', 'Señal', icon: Icons.bolt),
               _catChip('resultados', 'Resultado'),
               _catChip('proyecciones', 'Proyección'),
               _catChip('pregunta', 'Pregunta'),
@@ -273,21 +274,44 @@ class _FeedComposeScreenState extends State<FeedComposeScreen> {
     );
   }
 
-  Widget _catChip(String value, String label) {
+  Widget _catChip(String value, String label, {IconData? icon}) {
     final active = value == _category;
+    final accent = switch (value) {
+      'señales' => AppTheme.gold,
+      'resultados' => AppTheme.success,
+      'proyecciones' => AppTheme.violet,
+      'pregunta' => AppTheme.violet,
+      _ => AppTheme.violet,
+    };
     return ChoiceChip(
-      label: Text(label),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: active ? Colors.white : accent),
+            const SizedBox(width: 4),
+          ],
+          Text(label),
+        ],
+      ),
       selected: active,
-      onSelected: (_) => setState(() => _category = value),
-      selectedColor: AppTheme.violet,
+      onSelected: (_) {
+        setState(() {
+          _category = value;
+          if (value == 'señales') _showSignal = true;
+        });
+      },
+      selectedColor: accent,
       backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
-        color: active ? Colors.white : AppTheme.textSecondary,
-        fontSize: 12,
-        fontWeight: active ? FontWeight.bold : FontWeight.normal,
+        fontFamily: AppTheme.labelFont,
+        color: active ? Colors.black : AppTheme.textSecondary,
+        fontSize: 10,
+        fontWeight: active ? FontWeight.bold : FontWeight.w600,
+        letterSpacing: 1,
       ),
       side: BorderSide(
-        color: active ? AppTheme.violet : AppTheme.violet.withOpacity(0.3),
+        color: active ? accent : accent.withOpacity(0.5),
       ),
     );
   }

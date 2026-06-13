@@ -7,6 +7,7 @@ import 'providers/academia_provider.dart';
 import 'providers/tasks_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/admin_provider.dart';
+import 'providers/journal_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/hub_screen.dart';
 import 'screens/splash_screen.dart';
@@ -60,6 +61,9 @@ class TnsvtApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<AdminProvider>(
           create: (ctx) => AdminProvider(ctx.read<ApiService>()),
+        ),
+        ChangeNotifierProvider<JournalProvider>(
+          create: (ctx) => JournalProvider(ctx.read<ApiService>()),
         ),
       ],
       child: MaterialApp(

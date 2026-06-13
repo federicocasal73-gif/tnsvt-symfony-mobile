@@ -5,6 +5,7 @@ import 'macro/macro_calculator_screen.dart';
 import 'macro/macro_cycle_screen.dart';
 import 'macro/macro_concepts_screen.dart';
 import 'macro/macro_quiz_screen.dart';
+import 'macro/macro_two_steps_screen.dart';
 
 class MacroScreen extends StatelessWidget {
   const MacroScreen({super.key});
@@ -12,7 +13,7 @@ class MacroScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         backgroundColor: AppTheme.background,
         appBar: AppBar(
@@ -29,6 +30,19 @@ class MacroScreen extends StatelessWidget {
               Tab(icon: Icon(Icons.refresh), text: 'Ciclo'),
               Tab(icon: Icon(Icons.menu_book_outlined), text: 'Conceptos'),
               Tab(icon: Icon(Icons.quiz_outlined), text: 'Quiz'),
+              Tab(
+                icon: Icon(Icons.lock_outline, size: 18),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('2 Pasos',
+                        style: TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.bold)),
+                    SizedBox(width: 4),
+                    Icon(Icons.lock, size: 12, color: AppTheme.danger),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -39,6 +53,7 @@ class MacroScreen extends StatelessWidget {
             MacroCycleScreen(),
             MacroConceptsScreen(),
             MacroQuizScreen(),
+            MacroTwoStepsScreen(),
           ],
         ),
       ),
