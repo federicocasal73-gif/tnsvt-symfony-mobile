@@ -20,12 +20,6 @@ Ejemplo de pedido:
 
 ## Pendiente
 
-### [feat] Journal — fotos en trades
-El backend tiene el campo `photos` (JSON array) pero el editor del mobile no expone UI para adjuntar. Agregar boton 📷 al `_TradeEditor` con `ImageService.pickImageAsBase64()`.
-
-### [api] Calendar Economico — live via ForexFactory
-Reemplazar los 9 eventos hardcodeados en `calendar_screen.dart` por fetch a `https://nfs.faireconomy.media/ff_calendar_thisweek.json`. Mapear campos: title→name, country→currency, impact (1/2/3)→impact (low/medium/high), forecast/previous, time→date. Cache local con TTL 1h.
-
 ### [ui] HomeScreen — header con T.N.S.V.T + subtitulo
 El Hub ya tiene "Reino del Cristo Integro" en AppBar. El HomeScreen (que aparece al tocar el hex del Hub) NO lo tiene. Agregar mismo subtitulo debajo del titulo "T.N.S.V.T" en home_screen.dart.
 
@@ -57,6 +51,7 @@ Las tareas se muestran por `orden` ASC pero no hay UI para reordenarlas. Agregar
 
 ## Completado recientemente
 
+- v1.2 (2026-06-13): ~~Journal con fotos~~ + ~~Calendar live ForexFactory~~
 - v1.1 (2026-06-13): Calendar Economico + reacciones like/love/fire
 - v1.0 (2026-06-13): Hub iluminado + Cristo Integro como gateway
 - v0.9 (2026-06-13): 2 Pasos locked + Trading Journal
