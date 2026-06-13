@@ -15,10 +15,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
   final _df = DateFormat('EEE dd MMM');
   final _tf = DateFormat('HH:mm');
 
+  static const _filters = ['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+
   List<EconomicEvent>? _events;
   bool _loading = true;
   String? _error;
   DateTime? _lastUpdated;
+  String _filter = 'ALL';
 
   @override
   void initState() {
@@ -48,6 +51,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  List<EconomicEvent> _filteredEvents() {
+    if (_events == null) return [];
+    if (_filter == 'ALL') return _events!;
+    return _events!.where((e) => e.currency == _filter).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +72,41 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ],
       ),
       body: _buildBody(),
+    );
+  }
+
+  Widget _filterBar() {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        itemCount: _filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        itemBuilder: (_, i) {
+          final f = _filters[i];
+          final active = f == _filter;
+          return ChoiceChip(
+            label: Text(f == 'ALL' ? 'Todos' : f),
+            selected: active,
+            onSelected: (_) => setState(() => _filter = f),
+            selectedColor: AppTheme.gold,
+            backgroundColor: AppTheme.surface,
+            labelStyle: TextStyle(
+              fontFamily: AppTheme.labelFont,
+              color: active ? Colors.black : AppTheme.textSecondary,
+              fontSize: 10,
+              fontWeight: active ? FontWeight.bold : FontWeight.w600,
+              letterSpacing: 1.5,
+            ),
+            side: BorderSide(
+              color: active ? AppTheme.gold : AppTheme.violet.withOpacity(0.3),
+            ),
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          );
+        },
+      ),
     );
   }
 
@@ -121,8 +165,41 @@ class _CalendarScreenState extends State<CalendarScreen> {
       );
     }
 
+    final filtered = _filteredEvents();
+    if (filtered.isEmpty) {
+      return Column(
+        children: [
+          _filterBar(),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Sin eventos $_filter esta semana',
+                        style: TextStyle(
+                          fontFamily: AppTheme.displayFont,
+                          color: AppTheme.goldBright,
+                          fontSize: 14,
+                        )),
+                    const SizedBox(height: 6),
+                    TextButton(
+                      onPressed: () => setState(() => _filter = 'ALL'),
+                      child: Text('Ver todos',
+                          style: TextStyle(color: AppTheme.gold, fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     final byDate = <String, List<EconomicEvent>>{};
-    for (final e in _events!) {
+    for (final e in filtered) {
       final k = _df.format(e.date);
       byDate.putIfAbsent(k, () => []).add(e);
     }
@@ -130,54 +207,61 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return RefreshIndicator(
       color: AppTheme.gold,
       onRefresh: () => _load(force: true),
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-        itemCount: byDate.length + 1,
-        itemBuilder: (context, i) {
-          if (i == 0) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(8, 6, 8, 12),
-              child: Row(
-                children: [
-                  Icon(Icons.circle, size: 8, color: _loading ? AppTheme.gold : AppTheme.success),
-                  const SizedBox(width: 6),
-                  Text(
-                    _lastUpdated != null
-                        ? 'Actualizado ${DateFormat('HH:mm').format(_lastUpdated!)}'
-                        : 'Cargando...',
-                    style: TextStyle(
-                      fontFamily: AppTheme.labelFont,
-                      color: AppTheme.textMuted,
-                      fontSize: 9,
-                      letterSpacing: 1,
+      child: Column(
+        children: [
+          _filterBar(),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+              itemCount: byDate.length + 1,
+              itemBuilder: (context, i) {
+                if (i == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.circle, size: 8, color: _loading ? AppTheme.gold : AppTheme.success),
+                        const SizedBox(width: 6),
+                        Text(
+                          _lastUpdated != null
+                              ? 'Actualizado ${DateFormat('HH:mm').format(_lastUpdated!)} · ${filtered.length} eventos'
+                              : 'Cargando...',
+                          style: TextStyle(
+                            fontFamily: AppTheme.labelFont,
+                            color: AppTheme.textMuted,
+                            fontSize: 9,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
-          final date = byDate.keys.elementAt(i - 1);
-          final events = byDate[date]!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
-                child: Text(
-                  date.toUpperCase(),
-                  style: TextStyle(
-                    fontFamily: AppTheme.labelFont,
-                    color: AppTheme.goldBright,
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              ...events.map((e) => _eventTile(e)),
-            ],
-          );
-        },
+                  );
+                }
+                final date = byDate.keys.elementAt(i - 1);
+                final events = byDate[date]!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+                      child: Text(
+                        date.toUpperCase(),
+                        style: TextStyle(
+                          fontFamily: AppTheme.labelFont,
+                          color: AppTheme.goldBright,
+                          fontSize: 11,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ...events.map((e) => _eventTile(e)),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
