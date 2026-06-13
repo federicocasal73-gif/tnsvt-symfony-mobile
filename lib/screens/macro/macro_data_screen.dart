@@ -100,18 +100,28 @@ class MacroDataScreen extends StatelessWidget {
   Future<void> _open(BuildContext context, String url) async {
     final uri = Uri.parse(url);
     try {
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok && context.mounted) {
-        _toast(context, 'No se pudo abrir el enlace');
+      // Primer intento: app externa
+      var ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // Fallback: dejar que el sistema elija
+      if (!ok) {
+        ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
-    } catch (_) {
-      if (context.mounted) _toast(context, 'Error al abrir enlace');
+      if (!ok && context.mounted) {
+        _toast(context, 'No se pudo abrir: $url');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _toast(context, 'Error: ${e.toString().substring(0, 60)}');
+      }
     }
   }
 
   void _toast(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
+      SnackBar(
+        content: Text(msg, maxLines: 3, overflow: TextOverflow.ellipsis),
+        duration: const Duration(seconds: 4),
+      ),
     );
   }
 
