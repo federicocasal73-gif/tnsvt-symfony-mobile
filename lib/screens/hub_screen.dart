@@ -10,6 +10,7 @@ import 'profile_screen.dart';
 import 'admin_screen.dart';
 import 'notifications_screen.dart';
 import 'trading_journal_screen.dart';
+import 'calendar_screen.dart';
 
 class HubScreen extends StatefulWidget {
   const HubScreen({super.key});
@@ -122,6 +123,11 @@ class _HubScreenState extends State<HubScreen> with SingleTickerProviderStateMix
             icon: const Icon(Icons.assessment_outlined),
             tooltip: 'Trading Journal',
             onPressed: () => _go(context, const TradingJournalScreen()),
+          ),
+          IconButton(
+            icon: const Icon(Icons.event_note_outlined),
+            tooltip: 'Calendario Económico',
+            onPressed: () => _go(context, CalendarScreen()),
           ),
           if (isAdmin)
             IconButton(

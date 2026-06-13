@@ -30,7 +30,8 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin {
   late AnimationController _animCtrl;
-  bool _pulse = false;
+  String? _myReaction; // 'like' | 'love' | 'fire' | null
+  final Map<String, int> _localReacts = {'like': 0, 'love': 0, 'fire': 0};
 
   @override
   void initState() {
@@ -39,6 +40,15 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
       vsync: this,
       duration: const Duration(milliseconds: 220),
     );
+    _localReacts['like'] = widget.post.likes;
+  }
+
+  @override
+  void didUpdateWidget(covariant PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.post.likes != widget.post.likes) {
+      _localReacts['like'] = widget.post.likes;
+    }
   }
 
   @override
@@ -47,12 +57,34 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  Future<void> _handleLike() async {
-    setState(() => _pulse = true);
-    await _animCtrl.forward(from: 0);
-    await _animCtrl.reverse();
-    if (mounted) setState(() => _pulse = false);
-    widget.onLike();
+  Future<void> _setReaction(String r) async {
+    setState(() {
+      if (_myReaction == r) {
+        if (r == 'like') {
+          _localReacts['like'] = (_localReacts['like'] ?? 1) - 1;
+        } else {
+          _localReacts[r] = (_localReacts[r] ?? 0) - 1;
+        }
+        _myReaction = null;
+      } else {
+        if (_myReaction == 'like' && r != 'like') {
+          _localReacts['like'] = (_localReacts['like'] ?? 1) - 1;
+        }
+        if (_myReaction != null && _myReaction != 'like') {
+          _localReacts[_myReaction!] = (_localReacts[_myReaction!] ?? 1) - 1;
+        }
+        if (r == 'like') {
+          _localReacts['like'] = (_localReacts['like'] ?? 0) + 1;
+        } else {
+          _localReacts[r] = (_localReacts[r] ?? 0) + 1;
+        }
+        _myReaction = r;
+        if (r == 'like') {
+          _animCtrl.forward(from: 0).then((_) => _animCtrl.reverse());
+        }
+      }
+    });
+    if (r == 'like') widget.onLike();
   }
 
   @override
@@ -64,7 +96,6 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
     final isSignal = post.signal != null;
     final categoryColor = _categoryColor(post.category);
     final timeStr = _formatTime(post.createdAt);
-    final likedByMe = post.likes > 0 && _pulse;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -203,21 +234,22 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
           const SizedBox(height: 10),
           Row(
             children: [
-              _actionButton(
-                icon: likedByMe ? Icons.thumb_up : Icons.thumb_up_outlined,
-                label: '${post.likes}',
-                onTap: _handleLike,
-                color: likedByMe ? AppTheme.gold : AppTheme.textSecondary,
-                animate: true,
-              ),
-              const SizedBox(width: 18),
+              _reactButton('like', Icons.thumb_up,
+                  _localReacts['like'] ?? post.likes, _myReaction == 'like'),
+              const SizedBox(width: 14),
+              _reactButton('love', Icons.favorite,
+                  _localReacts['love'] ?? 0, _myReaction == 'love', color: AppTheme.danger),
+              const SizedBox(width: 14),
+              _reactButton('fire', Icons.local_fire_department,
+                  _localReacts['fire'] ?? 0, _myReaction == 'fire', color: AppTheme.warning),
+              const Spacer(),
               _actionButton(
                 icon: Icons.mode_comment_outlined,
                 label: '${post.comments.length}',
                 onTap: widget.onViewComments,
                 color: AppTheme.textSecondary,
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               TextButton(
                 onPressed: widget.onComment,
                 style: TextButton.styleFrom(
@@ -264,6 +296,31 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
               label,
               style: TextStyle(color: color, fontSize: 12),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _reactButton(String key, IconData icon, int count, bool active,
+      {Color? color}) {
+    final base = color ?? AppTheme.gold;
+    final c = active ? base : AppTheme.textSecondary;
+    return InkWell(
+      onTap: () => _setReaction(key),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: c),
+            const SizedBox(width: 4),
+            Text('$count',
+                style: TextStyle(
+                  color: c,
+                  fontSize: 12,
+                  fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                )),
           ],
         ),
       ),
