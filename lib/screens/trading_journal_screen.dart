@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../models/trade.dart';
 import '../providers/auth_provider.dart';
 import '../providers/journal_provider.dart';
+import '../services/image_service.dart';
 
 class TradingJournalScreen extends StatefulWidget {
   const TradingJournalScreen({super.key});
@@ -260,6 +261,31 @@ class _TradingJournalScreenState extends State<TradingJournalScreen> {
                   fontStyle: FontStyle.italic,
                 )),
           ],
+          if (t.photos.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 56,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: t.photos.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                itemBuilder: (_, i) => ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.memory(
+                    ImageService.base64ToBytes(t.photos[i]),
+                    width: 56, height: 56,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 56, height: 56,
+                      color: AppTheme.surfaceLight,
+                      child: const Icon(Icons.broken_image,
+                          color: AppTheme.textMuted, size: 20),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -292,9 +318,11 @@ class _TradeEditorState extends State<_TradeEditor> {
   final _tp = TextEditingController();
   final _pnl = TextEditingController();
   final _notes = TextEditingController();
+  final _imageService = ImageService();
   String _dir = 'BUY';
   String _result = 'OPEN';
   bool _saving = false;
+  final List<String> _photos = [];
 
   @override
   void dispose() {
@@ -305,6 +333,17 @@ class _TradeEditorState extends State<_TradeEditor> {
     _pnl.dispose();
     _notes.dispose();
     super.dispose();
+  }
+
+  Future<void> _addPhoto() async {
+    final base64 = await _imageService.pickImageAsBase64();
+    if (base64 != null) {
+      setState(() => _photos.add(base64));
+    }
+  }
+
+  void _removePhoto(int i) {
+    setState(() => _photos.removeAt(i));
   }
 
   Future<void> _save() async {
@@ -326,6 +365,7 @@ class _TradeEditorState extends State<_TradeEditor> {
       'result': _result,
       'pnl': double.tryParse(_pnl.text.trim()) ?? 0,
       'notes': _notes.text.trim(),
+      'photos': _photos,
     });
     if (!mounted) return;
     setState(() => _saving = false);
@@ -421,6 +461,61 @@ class _TradeEditorState extends State<_TradeEditor> {
                 labelStyle: TextStyle(color: AppTheme.gold, fontSize: 11, letterSpacing: 1.5),
               ),
             ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _addPhoto,
+                  icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+                  label: Text('📷 Adjuntar foto (${_photos.length})',
+                      style: const TextStyle(fontSize: 11)),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppTheme.violet.withOpacity(0.3)),
+                  ),
+                ),
+              ],
+            ),
+            if (_photos.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 72,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _photos.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) {
+                    final p = _photos[i];
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.memory(
+                            ImageService.base64ToBytes(p),
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 2, right: 2,
+                          child: GestureDetector(
+                            onTap: () => _removePhoto(i),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.background.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, color: AppTheme.danger, size: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _saving ? null : _save,

@@ -52,6 +52,18 @@ class JournalProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> update(String userCode, int id, Map<String, dynamic> data) async {
+    try {
+      await _api.put('/api/journal/$id', body: data);
+      await fetch(userCode);
+      return true;
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> delete(String userCode, int id) async {
     try {
       await _api.delete('/api/journal/$id');

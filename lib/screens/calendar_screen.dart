@@ -1,140 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../config/theme.dart';
+import '../services/calendar_service.dart';
 
-class EconomicEvent {
-  final DateTime date;
-  final String code;
-  final String name;
-  final String impact; // high, medium, low
-  final String forecast;
-  final String previous;
-  final String currency;
+class CalendarScreen extends StatefulWidget {
+  const CalendarScreen({super.key});
 
-  EconomicEvent({
-    required this.date,
-    required this.code,
-    required this.name,
-    required this.impact,
-    this.forecast = '—',
-    this.previous = '—',
-    this.currency = 'USD',
-  });
+  @override
+  State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class CalendarScreen extends StatelessWidget {
-  CalendarScreen({super.key});
+class _CalendarScreenState extends State<CalendarScreen> {
+  final _service = CalendarService();
+  final _df = DateFormat('EEE dd MMM');
+  final _tf = DateFormat('HH:mm');
 
-  static final List<EconomicEvent> _events = [
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 1, hours: 2)),
-      code: 'FOMC',
-      name: 'Federal Funds Rate Decision',
-      impact: 'high',
-      forecast: '5.25%',
-      previous: '5.25%',
-      currency: 'USD',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 1, hours: 4)),
-      code: 'CPI',
-      name: 'Consumer Price Index (YoY)',
-      impact: 'high',
-      forecast: '3.2%',
-      previous: '3.4%',
-      currency: 'USD',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 2, hours: 1)),
-      code: 'NFP',
-      name: 'Non-Farm Payrolls',
-      impact: 'high',
-      forecast: '180K',
-      previous: '175K',
-      currency: 'USD',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 2, hours: 3)),
-      code: 'PMI',
-      name: 'Purchasing Managers Index',
-      impact: 'medium',
-      forecast: '52.1',
-      previous: '51.8',
-      currency: 'USD',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 3, hours: 1)),
-      code: 'GDP',
-      name: 'Gross Domestic Product (QoQ)',
-      impact: 'high',
-      forecast: '2.1%',
-      previous: '2.0%',
-      currency: 'USD',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 3, hours: 2)),
-      code: 'RETAIL',
-      name: 'Retail Sales (MoM)',
-      impact: 'medium',
-      forecast: '0.3%',
-      previous: '0.1%',
-      currency: 'USD',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 4, hours: 1)),
-      code: 'ECB',
-      name: 'European Central Bank Rate',
-      impact: 'high',
-      forecast: '4.25%',
-      previous: '4.25%',
-      currency: 'EUR',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 5, hours: 4)),
-      code: 'BOE',
-      name: 'Bank of England Rate',
-      impact: 'medium',
-      forecast: '5.00%',
-      previous: '5.00%',
-      currency: 'GBP',
-    ),
-    EconomicEvent(
-      date: DateTime.now().add(const Duration(days: 6, hours: 1)),
-      code: 'PMI',
-      name: 'Services PMI',
-      impact: 'low',
-      forecast: '53.0',
-      previous: '52.9',
-      currency: 'USD',
-    ),
-  ];
+  List<EconomicEvent>? _events;
+  bool _loading = true;
+  String? _error;
+  DateTime? _lastUpdated;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load({bool force = false}) async {
+    setState(() {
+      _loading = _events == null;
+      _error = null;
+    });
+    try {
+      final events = await _service.fetchEvents(forceRefresh: force);
+      if (!mounted) return;
+      setState(() {
+        _events = events;
+        _loading = false;
+        _lastUpdated = DateTime.now();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final df = DateFormat('EEE dd MMM');
-    final tf = DateFormat('HH:mm');
-    final byDate = <String, List<EconomicEvent>>{};
-    for (final e in _events) {
-      final k = df.format(e.date);
-      byDate.putIfAbsent(k, () => []).add(e);
-    }
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('CALENDARIO ECONÓMICO'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Actualizar',
+            onPressed: _loading ? null : () => _load(force: true),
+          ),
+        ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-        itemCount: byDate.length,
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading && _events == null) {
+      return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
+    }
+    if (_error != null && _events == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off, color: AppTheme.danger, size: 48),
+              const SizedBox(height: 12),
+              Text('No se pudo cargar el calendario',
+                  style: TextStyle(
+                    fontFamily: AppTheme.displayFont,
+                    color: AppTheme.goldBright,
+                    fontSize: 16,
+                  )),
+              const SizedBox(height: 6),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    color: AppTheme.textMuted,
+                    fontSize: 11,
+                  )),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => _load(force: true),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('REINTENTAR'),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: AppTheme.gold.withOpacity(0.5)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_events == null || _events!.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Sin eventos para esta semana',
+              style: TextStyle(
+                fontFamily: AppTheme.displayFont,
+                color: AppTheme.goldBright,
+                fontSize: 14,
+              )),
+        ),
+      );
+    }
+
+    final byDate = <String, List<EconomicEvent>>{};
+    for (final e in _events!) {
+      final k = _df.format(e.date);
+      byDate.putIfAbsent(k, () => []).add(e);
+    }
+
+    return RefreshIndicator(
+      color: AppTheme.gold,
+      onRefresh: () => _load(force: true),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+        itemCount: byDate.length + 1,
         itemBuilder: (context, i) {
-          final date = byDate.keys.elementAt(i);
+          if (i == 0) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.circle, size: 8, color: _loading ? AppTheme.gold : AppTheme.success),
+                  const SizedBox(width: 6),
+                  Text(
+                    _lastUpdated != null
+                        ? 'Actualizado ${DateFormat('HH:mm').format(_lastUpdated!)}'
+                        : 'Cargando...',
+                    style: TextStyle(
+                      fontFamily: AppTheme.labelFont,
+                      color: AppTheme.textMuted,
+                      fontSize: 9,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          final date = byDate.keys.elementAt(i - 1);
           final events = byDate[date]!;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
+                padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
                 child: Text(
                   date.toUpperCase(),
                   style: TextStyle(
@@ -146,7 +174,7 @@ class CalendarScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              ...events.map((e) => _eventTile(e, tf)),
+              ...events.map((e) => _eventTile(e)),
             ],
           );
         },
@@ -154,7 +182,7 @@ class CalendarScreen extends StatelessWidget {
     );
   }
 
-  Widget _eventTile(EconomicEvent e, DateFormat tf) {
+  Widget _eventTile(EconomicEvent e) {
     final impactColor = e.impact == 'high'
         ? AppTheme.danger
         : e.impact == 'medium'
@@ -187,7 +215,7 @@ class CalendarScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
                     )),
-                Text(tf.format(e.date),
+                Text(_tf.format(e.date),
                     style: TextStyle(
                       color: impactColor,
                       fontSize: 11,
@@ -204,14 +232,16 @@ class CalendarScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(e.code,
-                        style: TextStyle(
-                          fontFamily: AppTheme.displayFont,
-                          color: AppTheme.goldBright,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                        )),
+                    Flexible(
+                      child: Text(e.code,
+                          style: TextStyle(
+                            fontFamily: AppTheme.displayFont,
+                            color: AppTheme.goldBright,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          )),
+                    ),
                     const SizedBox(width: 8),
                     Icon(
                       e.impact == 'high'
@@ -234,14 +264,17 @@ class CalendarScreen extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _miniStat('F', e.forecast, AppTheme.gold),
-                    const SizedBox(width: 10),
-                    _miniStat('P', e.previous, AppTheme.textMuted),
-                  ],
-                ),
+                if (e.forecast.isNotEmpty || e.previous.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (e.forecast.isNotEmpty) _miniStat('F', e.forecast, AppTheme.gold),
+                      if (e.forecast.isNotEmpty && e.previous.isNotEmpty)
+                        const SizedBox(width: 10),
+                      if (e.previous.isNotEmpty) _miniStat('P', e.previous, AppTheme.textMuted),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -261,13 +294,16 @@ class CalendarScreen extends StatelessWidget {
               letterSpacing: 1,
             )),
         const SizedBox(width: 4),
-        Text(value,
-            style: TextStyle(
-              fontFamily: AppTheme.labelFont,
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            )),
+        Flexible(
+          child: Text(value,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppTheme.labelFont,
+                color: color,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              )),
+        ),
       ],
     );
   }
