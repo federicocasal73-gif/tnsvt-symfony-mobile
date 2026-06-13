@@ -4,7 +4,7 @@ import '../models/feed_post.dart';
 import 'signal_card.dart';
 import 'package:intl/intl.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final FeedPost post;
   final String currentUserCode;
   final bool isAdmin;
@@ -20,16 +20,51 @@ class PostCard extends StatelessWidget {
     required this.isAdmin,
     required this.onLike,
     required this.onComment,
+    required this.onDelete,
     required this.onViewComments,
-    this.onDelete,
   });
 
   @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  bool _pulse = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLike() async {
+    setState(() => _pulse = true);
+    await _animCtrl.forward(from: 0);
+    await _animCtrl.reverse();
+    if (mounted) setState(() => _pulse = false);
+    widget.onLike();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
+    final currentUserCode = widget.currentUserCode;
+    final isAdmin = widget.isAdmin;
     final isAuthor = post.authorCode == currentUserCode;
     final isSignal = post.signal != null;
     final categoryColor = _categoryColor(post.category);
     final timeStr = _formatTime(post.createdAt);
+    final likedByMe = post.likes > 0 && _pulse;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -116,10 +151,10 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if ((isAuthor || isAdmin) && onDelete != null)
+              if ((isAuthor || isAdmin) && widget.onDelete != null)
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: AppTheme.danger, size: 18),
-                  onPressed: onDelete,
+                  onPressed: widget.onDelete,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
@@ -169,21 +204,22 @@ class PostCard extends StatelessWidget {
           Row(
             children: [
               _actionButton(
-                icon: Icons.thumb_up_outlined,
+                icon: likedByMe ? Icons.thumb_up : Icons.thumb_up_outlined,
                 label: '${post.likes}',
-                onTap: onLike,
-                color: AppTheme.textSecondary,
+                onTap: _handleLike,
+                color: likedByMe ? AppTheme.gold : AppTheme.textSecondary,
+                animate: true,
               ),
               const SizedBox(width: 18),
               _actionButton(
                 icon: Icons.mode_comment_outlined,
                 label: '${post.comments.length}',
-                onTap: onViewComments,
+                onTap: widget.onViewComments,
                 color: AppTheme.textSecondary,
               ),
               const Spacer(),
               TextButton(
-                onPressed: onComment,
+                onPressed: widget.onComment,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: const Size(0, 32),
@@ -205,7 +241,9 @@ class PostCard extends StatelessWidget {
     required String label,
     required VoidCallback onTap,
     required Color color,
+    bool animate = false,
   }) {
+    final iconWidget = Icon(icon, size: 16, color: color);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
@@ -213,7 +251,14 @@ class PostCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: color),
+            animate
+                ? ScaleTransition(
+                    scale: Tween<double>(begin: 1.0, end: 1.5).animate(
+                      CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut),
+                    ),
+                    child: iconWidget,
+                  )
+                : iconWidget,
             const SizedBox(width: 4),
             Text(
               label,
