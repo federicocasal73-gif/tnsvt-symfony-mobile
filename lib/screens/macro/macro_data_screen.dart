@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../../../config/theme.dart';
 
 class _DataLink {
@@ -97,30 +97,10 @@ class MacroDataScreen extends StatelessWidget {
     ),
   ];
 
-  Future<void> _open(BuildContext context, String url) async {
-    final uri = Uri.parse(url);
-    try {
-      // Primer intento: app externa
-      var ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      // Fallback: dejar que el sistema elija
-      if (!ok) {
-        ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
-      }
-      if (!ok && context.mounted) {
-        _toast(context, 'No se pudo abrir: $url');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        _toast(context, 'Error: ${e.toString().substring(0, 60)}');
-      }
-    }
-  }
-
-  void _toast(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, maxLines: 3, overflow: TextOverflow.ellipsis),
-        duration: const Duration(seconds: 4),
+  void _open(BuildContext context, _DataLink l) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _WebViewScreen(title: l.title, url: l.url, color: l.color),
       ),
     );
   }
@@ -153,7 +133,7 @@ class MacroDataScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Los enlaces se abren en el navegador del sistema. Volvé a TNSVT con el botón Back.',
+                    'Los enlaces se abren dentro de la app (webview). Volvé con el botón Cerrar o Back del sistema.',
                     style: TextStyle(
                       fontFamily: AppTheme.labelFont,
                       color: AppTheme.textSecondary,
@@ -199,7 +179,7 @@ class MacroDataScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(6),
-          onTap: () => _open(context, l.url),
+          onTap: () => _open(context, l),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -243,11 +223,102 @@ class MacroDataScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.open_in_new, color: l.color.withOpacity(0.6), size: 16),
+                Icon(Icons.arrow_forward_ios, color: l.color.withOpacity(0.6), size: 14),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WebViewScreen extends StatefulWidget {
+  final String title;
+  final String url;
+  final Color color;
+
+  const _WebViewScreen({required this.title, required this.url, required this.color});
+
+  @override
+  State<_WebViewScreen> createState() => _WebViewScreenState();
+}
+
+class _WebViewScreenState extends State<_WebViewScreen> {
+  late final WebViewController _ctrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(AppTheme.surface)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (_) => setState(() => _loading = true),
+        onPageFinished: (_) => setState(() => _loading = false),
+        onWebResourceError: (e) {
+          setState(() => _loading = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: ${e.description}')),
+            );
+          }
+        },
+      ))
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        backgroundColor: AppTheme.surface,
+        title: Row(
+          children: [
+            Container(
+              width: 4, height: 16,
+              decoration: BoxDecoration(
+                color: widget.color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                widget.title,
+                style: TextStyle(
+                  fontFamily: AppTheme.displayFont,
+                  fontSize: 13,
+                  letterSpacing: 1,
+                  color: widget.color,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _ctrl.reload(),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _ctrl),
+          if (_loading)
+            const Center(
+              child: CircularProgressIndicator(color: AppTheme.gold),
+            ),
+        ],
       ),
     );
   }
