@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/feed_provider.dart';
+import 'providers/academia_provider.dart';
+import 'providers/tasks_provider.dart';
+import 'providers/chat_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/api_service.dart';
@@ -32,6 +35,21 @@ class TnsvtApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<FeedProvider>(
           create: (ctx) => FeedProvider(
+            ctx.read<ApiService>(),
+            ctx.read<AuthProvider>(),
+          ),
+        ),
+        ChangeNotifierProvider<AcademiaProvider>(
+          create: (ctx) => AcademiaProvider(ctx.read<ApiService>()),
+        ),
+        ChangeNotifierProvider<TasksProvider>(
+          create: (ctx) => TasksProvider(
+            ctx.read<ApiService>(),
+            ctx.read<StorageService>(),
+          ),
+        ),
+        ChangeNotifierProvider<ChatProvider>(
+          create: (ctx) => ChatProvider(
             ctx.read<ApiService>(),
             ctx.read<AuthProvider>(),
           ),
