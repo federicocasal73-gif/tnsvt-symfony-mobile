@@ -1,20 +1,104 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../config/theme.dart';
+import '../providers/auth_provider.dart';
+import '../services/notification_service.dart';
 import 'feed_screen.dart';
 import 'academia_screen.dart';
 import 'macro_screen.dart';
 import 'tasks_screen.dart';
+import 'chat_list_screen.dart';
+import 'profile_screen.dart';
+import 'admin_screen.dart';
+import 'notifications_screen.dart';
 
 class HubScreen extends StatelessWidget {
   const HubScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isAdmin = auth.isAdmin;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('HUB CENTRAL'),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Desconectar',
+          onPressed: () async {
+            await auth.logout();
+            if (context.mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+            }
+          },
+        ),
+        actions: [
+          ValueListenableBuilder<int>(
+            valueListenable: NotificationService.instance.unreadCount,
+            builder: (context, count, _) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    tooltip: 'Notificaciones',
+                    onPressed: () async {
+                      final userCode = context.read<AuthProvider>().userCode;
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      );
+                      if (userCode != null) {
+                        await NotificationService.instance.refreshUnreadCount(userCode);
+                      }
+                    },
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTheme.danger,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(color: AppTheme.background, width: 1.5),
+                        ),
+                        child: Text(
+                          count > 99 ? '99+' : '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            tooltip: 'Chat',
+            onPressed: () => _go(context, const ChatListScreen()),
+          ),
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppTheme.gold),
+              tooltip: 'Panel Admin',
+              onPressed: () => _go(context, const AdminScreen()),
+            ),
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Perfil',
+            onPressed: () => _go(context, const ProfileScreen()),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

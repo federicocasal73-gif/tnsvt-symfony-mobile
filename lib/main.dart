@@ -8,7 +8,7 @@ import 'providers/tasks_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/admin_provider.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/hub_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/api_service.dart';
 import 'services/image_service.dart';
@@ -98,6 +98,6 @@ class _AuthGateState extends State<_AuthGate> {
     if (auth.user == null) {
       return const LoginScreen();
     }
-    return const HomeScreen();
+    return const HubScreen();
   }
 }
