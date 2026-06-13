@@ -62,12 +62,15 @@ class EconomicEvent {
 
 class CalendarService {
   static const _url = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
-  static const _cacheTtl = Duration(hours: 1);
+  static const _cacheTtl = Duration(hours: 6);
 
   final Dio _dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 15),
-    headers: {'Accept': 'application/json'},
+    headers: {
+      'Accept': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36 TNSVT/1.0',
+    },
   ));
 
   List<EconomicEvent>? _cache;
@@ -80,10 +83,24 @@ class CalendarService {
       }
     }
     final response = await _dio.get(_url);
+    if (response.statusCode == 429 || response.statusCode == 503) {
+      // Rate limit / bloqueado: usar cache si hay
+      if (_cache != null) {
+        return _cache!;
+      }
+      throw Exception('ForexFactory rate-limit. Reintentá en 5 minutos.');
+    }
     if (response.statusCode != 200) {
       throw Exception('HTTP ${response.statusCode}');
     }
-    final List<dynamic> data = response.data as List<dynamic>;
+    final body = response.data;
+    if (body is String && body.contains('Request Denied')) {
+      if (_cache != null) {
+        return _cache!;
+      }
+      throw Exception('ForexFactory bloqueó la petición. Reintentá en 5 min.');
+    }
+    final List<dynamic> data = body as List<dynamic>;
     final events = data
         .map((e) => EconomicEvent.fromJson(e as Map<String, dynamic>))
         .where((e) => e.impact != 'holiday')
