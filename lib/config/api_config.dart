@@ -8,13 +8,13 @@ class ApiConfig {
   );
 
   /// URL final del backend, elegida en este orden:
-  /// 1. API_BASE_URL (si se pasó al compilar)
+  /// 1. API_BASE_URL (si se pasó al compilar) - ej: --dart-define=API_BASE_URL=http://192.168.1.2:8000
   /// 2. Web → http://localhost:8000
-  /// 3. Otras plataformas → http://10.0.2.2:8000 (emulador Android)
+  /// 3. Otras plataformas → http://192.168.1.2:8000 (IP de la PC en red local)
   static String get baseUrl {
     if (_compileTimeUrl.isNotEmpty) return _compileTimeUrl;
     if (kIsWeb) return 'http://localhost:8000';
-    return 'http://10.0.2.2:8000';
+    return 'http://192.168.1.2:8000';
   }
 
   static const String academiaPasswordHint = 'Contraseña Academia';
