@@ -3,7 +3,7 @@ import '../config/api_config.dart';
 
 class ApiService {
   late final Dio _dio;
-  String? _sessionCookie;
+  final Map<String, String> _sessionCookies = {};
 
   ApiService() {
     _dio = Dio(BaseOptions(
@@ -18,15 +18,27 @@ class ApiService {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        if (_sessionCookie != null) {
-          options.headers['Cookie'] = _sessionCookie!;
+        if (_sessionCookies.isNotEmpty) {
+          options.headers['Cookie'] = _sessionCookies.entries
+              .map((e) => '${e.key}=${e.value}')
+              .join('; ');
         }
         handler.next(options);
       },
       onResponse: (response, handler) {
-        final cookies = response.headers['set-cookie'];
-        if (cookies != null && cookies.isNotEmpty) {
-          _sessionCookie = cookies.first.split(';').first;
+        final setCookies = response.headers['set-cookie'];
+        if (setCookies != null) {
+          for (final raw in setCookies) {
+            final firstPart = raw.split(';').first.trim();
+            final eq = firstPart.indexOf('=');
+            if (eq > 0) {
+              final name = firstPart.substring(0, eq).trim();
+              final value = firstPart.substring(eq + 1).trim();
+              if (name.isNotEmpty && value.isNotEmpty) {
+                _sessionCookies[name] = value;
+              }
+            }
+          }
         }
         handler.next(response);
       },
@@ -34,7 +46,7 @@ class ApiService {
   }
 
   void clearSession() {
-    _sessionCookie = null;
+    _sessionCookies.clear();
   }
 
   Future<Map<String, dynamic>> login(String code, {String? password}) async {
